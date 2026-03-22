@@ -109,7 +109,7 @@ The compiler produces the following `.outz` file:
 2 0
 2 1
 13
-17 17
+17 14
 8 0
 2 0
 1 0 0 0 1
@@ -130,7 +130,7 @@ The compiler produces the following `.outz` file:
 | `4` | `2 0` | LOAD `i` (slot 0) — loop condition start |
 | `5` | `2 1` | LOAD `limit` (slot 1) |
 | `6` | `13` | CMP_LTE — push `1` if `i <= limit`, else `0` |
-| `7` | `17 17` | JZ 17 — exit loop if condition is `0` |
+| `7` | `17 14` | JZ 14 — exit loop if condition is `0` (jumps to HALT) |
 | `8` | `8 0` | PRINT `i` (slot 0) |
 | `9` | `2 0` | LOAD `i` (slot 0) — begin `i = i + 1` |
 | `10` | `1 0 0 0 1` | PUSH literal `1` |
@@ -140,7 +140,7 @@ The compiler produces the following `.outz` file:
 | `14` | `9` | HALT |
 
 <Note>
-`JZ 17` at address `7` targets address `17`, which does not exist in this program. Because the jump target is beyond the last instruction (`14`), the VM's `while (pc < bytecode_program.size())` loop condition becomes false and execution stops cleanly without a `HALT` being reached. In practice the compiler always emits a `HALT` so the program terminates at address `14`.
+The `JZ` at address `7` targets address `14` — the `HALT` instruction. When the loop condition becomes false (`i > limit`), the VM jumps directly to `HALT` and terminates. The `JMP` at address `13` jumps back to address `4` to re-evaluate the condition at the start of the next iteration.
 </Note>
 
 ### Variable slot assignment

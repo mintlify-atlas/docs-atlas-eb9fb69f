@@ -8,14 +8,14 @@ ELIN errors fall into two categories: **compile-time errors** reported by the co
 
 ## Compile-time vs. runtime errors
 
-<Columns cols={2}>
+<CardGroup cols={2}>
   <Card title="Compile-time errors" icon="triangle-exclamation">
     Detected by `compiler.py` while translating source to bytecode. The compiler prints the error message to stdout and exits with code `1` via `sys.exit(1)`. No bytecode file is produced.
   </Card>
   <Card title="Runtime errors" icon="bolt">
     Detected by the VM (`main.cpp`) during execution of a `.outz` bytecode file. The VM prints a message and continues running from the next instruction — it does **not** halt automatically.
   </Card>
-</Columns>
+</CardGroup>
 
 ---
 

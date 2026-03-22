@@ -151,7 +151,7 @@ The compiler produces:
 2 0
 2 1
 13
-17 17
+17 14
 8 0
 2 0
 1 0 0 0 1
@@ -161,13 +161,13 @@ The compiler produces:
 9
 ```
 
-Breaking it down:
+Breaking it down (addresses are 0-indexed into the non-comment instruction lines):
 
-- Lines 5–6: Push `1`, store in `i` (slot 0).
-- Lines 7–8: Push `3`, store in `limit` (slot 1).
-- Lines 9–11: Load `i` and `limit`, emit `CMP_LTE` (opcode `13`) — the loop condition.
-- Line 12: `JZ 17` — exit loop if condition is zero.
-- Line 13: `PRINT 0` — print `i`.
-- Lines 14–16: Load `i`, push `1`, `ADD`, store back into `i`.
-- Line 17: `JMP 4` — jump back to the loop condition.
-- Line 18: `HALT`.
+- Addresses 0–1: Push `1`, store in `i` (slot 0).
+- Addresses 2–3: Push `3`, store in `limit` (slot 1).
+- Addresses 4–6: Load `i` and `limit`, emit `CMP_LTE` (opcode `13`) — the loop condition start.
+- Address 7: `JZ 14` — exit loop if condition is zero (jumps to HALT at address 14).
+- Address 8: `PRINT 0` — print `i`.
+- Addresses 9–12: Load `i`, push `1`, `ADD`, store back into `i`.
+- Address 13: `JMP 4` — jump back to the loop condition.
+- Address 14: `HALT`.

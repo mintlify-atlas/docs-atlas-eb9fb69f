@@ -95,7 +95,7 @@ wend
 ## Iteration limit
 
 <Warning>
-  ELIN enforces a maximum of **999,999,999** iterations per loop. This limit exists to prevent infinite loops from locking up the hardware target (ESP8266). Programs that reach this limit are forcibly halted by the VM.
+  The README notes a practical maximum of **999,999,999** loop iterations to prevent lockups on embedded hardware (ESP8266). The current C++ VM does not enforce this limit in code — programs with infinite loops will run until manually terminated. Always ensure your loop condition is reachable to avoid this.
 </Warning>
 
 ## Avoiding infinite loops
