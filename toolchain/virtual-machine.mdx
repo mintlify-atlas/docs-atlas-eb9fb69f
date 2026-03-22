@@ -1,0 +1,129 @@
+---
+title: "Virtual machine"
+description: "The C++ integer stack machine that reads and executes ELIN .outz bytecode files."
+---
+
+# Virtual machine
+
+The ELIN virtual machine is a C++ program that reads a `.outz` bytecode file line by line, loads all non-comment instructions into an indexed program array, then executes them sequentially using a program counter and an integer evaluation stack.
+
+## Building
+
+Compile the VM with any modern C++ compiler. The source file uses `<bits/stdc++.h>` so GCC is the most straightforward option:
+
+```bash
+g++ -o elin_vm executor/main.cpp
+```
+
+No external dependencies are required.
+
+## Running
+
+```bash
+./elin_vm
+```
+
+<Warning>
+The input filename is hardcoded in `main()` as `"test.outz"`. The VM always reads from a file named `test.outz` in the current working directory regardless of any arguments. To run a different program you must either rename your `.outz` file to `test.outz` or recompile the VM after changing the filename in `main.cpp`.
+</Warning>
+
+The VM prints `=== Execution Started ===` before running and `=== Execution Finished ===` after the program halts or runs out of instructions.
+
+## Architecture
+
+### Global state
+
+Three global data structures hold all runtime state:
+
+```cpp
+vector<pair<int, string>> bytecode_program; // (index, instruction_line)
+vector<long long>         variables;        // variable slots, indexed by integer
+stack<int>                eval_stack;       // integer evaluation stack
+```
+
+**`bytecode_program`** — Populated at startup by reading the `.outz` file. Comment lines (lines starting with `#`) and blank lines are skipped. Each surviving line is stored as a pair of `(sequential_index, raw_string)`. The sequential index starts at `0` and increments for every instruction added; this is the address space used by `JMP`, `JZ`, and `JNZ`.
+
+**`variables`** — A `vector<long long>` that grows on demand. When a `STORE` instruction targets an index beyond the current vector size, the vector is resized and the new slots are zero-initialised. Reads and writes use the integer slot assigned by the compiler.
+
+**`eval_stack`** — A `stack<int>` used for all intermediate computation. Binary operations pop two values, compute a result, and push it back. `PUSH` and `LOAD` push values on; `STORE` and `PRINT` consume a value from the stack or read directly from `variables`.
+
+### Program counter
+
+The `pc` variable in `execute()` is a simple integer index into `bytecode_program`. It starts at `0` and is incremented by `1` at the bottom of every loop iteration. Jump instructions set `pc` to the target address and then subtract `1` (`pc--`) so that the loop's final `pc++` brings it to the correct instruction.
+
+```cpp
+case JMP: {
+    int address = tokens[1];
+    pc = address;
+    pc--; // compensate for pc++ at end of loop
+    break;
+}
+```
+
+## Execution loop
+
+The `execute()` function is the VM's core. It loops while `pc < bytecode_program.size()`, fetching the instruction string for the current `pc`, tokenising it, and dispatching on `tokens[0]` (the opcode).
+
+### Instruction tokenisation
+
+Each instruction line is a string of space-separated integers. The VM parses it using `std::istringstream`:
+
+```cpp
+istringstream iss(instruction_line);
+vector<int> tokens;
+int token;
+while (iss >> token) {
+    tokens.push_back(token);
+}
+int opcode = tokens[0];
+```
+
+All subsequent token reads use direct index access (`tokens[1]`, `tokens[4]`, etc.) as defined by each instruction's format.
+
+### Opcode dispatch
+
+| Opcode | Constant | Tokens read | Behaviour |
+|---|---|---|---|
+| `1` | `PUSH` | `tokens[4]` | Pushes the literal integer value onto `eval_stack`. The format is `1 0 0 0 <value>`; the value is always at index 4. |
+| `2` | `LOAD` | `tokens[1]` | Pushes `variables[tokens[1]]` onto `eval_stack`. Does nothing if the index is out of range. |
+| `3` | `STORE` | `tokens[1]` | Pops the top of `eval_stack` and writes it into `variables[tokens[1]]`, resizing `variables` if needed. |
+| `4` | `ADD` | — | Pops `b`, pops `a`, pushes `a + b`. |
+| `5` | `SUB` | — | Pops `b`, pops `a`, pushes `a - b`. |
+| `6` | `MUL` | — | Pops `b`, pops `a`, pushes `a * b`. |
+| `7` | `DIV` | — | Pops `b`, pops `a`, pushes `a / b`. Prints `Error: Division by zero` and skips the push if `b == 0`. |
+| `8` | `PRINT` | `tokens[1]` | Prints `variables[tokens[1]]` to stdout followed by a newline. |
+| `9` | `HALT` | — | Returns immediately from `execute()`, ending the program. |
+| `10` | `CMP_EQ` | — | Pops `b` and `a`, pushes `1` if `a == b`, else `0`. |
+| `11` | `CMP_NEQ` | — | Pops `b` and `a`, pushes `1` if `a != b`, else `0`. |
+| `12` | `CMP_LT` | — | Pops `b` and `a`, pushes `1` if `a < b`, else `0`. |
+| `13` | `CMP_LTE` | — | Pops `b` and `a`, pushes `1` if `a <= b`, else `0`. |
+| `14` | `CMP_GT` | — | Pops `b` and `a`, pushes `1` if `a > b`, else `0`. |
+| `15` | `CMP_GTE` | — | Pops `b` and `a`, pushes `1` if `a >= b`, else `0`. |
+| `16` | `JMP` | `tokens[1]` | Sets `pc` to `tokens[1]` (with `pc--` compensation). |
+| `17` | `JZ` | `tokens[1]` | Pops the top of `eval_stack`. If the value is `0`, sets `pc` to `tokens[1]` (with `pc--` compensation). |
+| `18` | `JNZ` | `tokens[1]` | Pops the top of `eval_stack`. If the value is not `0`, sets `pc` to `tokens[1]` (with `pc--` compensation). |
+
+<Note>
+All binary arithmetic and comparison opcodes (`4`–`7`, `10`–`15`) require at least two values on `eval_stack`. If fewer than two values are present the instruction silently does nothing.
+</Note>
+
+## The `Printer` class
+
+A global `Printer` instance named `printer` provides formatted output helpers:
+
+- **`print(int)`** / **`print(const string&)`** — Writes a value to stdout with a trailing newline.
+- **`print_debug(label, value)`** — Writes `[DEBUG] <label>: <value>` to stdout. Used by the VM to report out-of-range variable accesses and unknown opcodes.
+- **`print_variables()`** — Dumps the full `variables` vector in a labelled block (`var[0] = ...`, `var[1] = ...`, etc.). Useful when debugging compiled programs.
+- **`print_stack()`** — Dumps the current contents of `eval_stack` from bottom to top in a labelled block.
+
+<Tip>
+Add calls to `printer.print_variables()` or `printer.print_stack()` inside the execution loop to trace program state instruction by instruction during debugging.
+</Tip>
+
+## Limitations
+
+- **Hardcoded input file**: The VM reads `test.outz` unconditionally. There is no command-line argument handling.
+- **Integer-only arithmetic**: `variables` is `vector<long long>` but `eval_stack` uses `int`. All values are integers — there is no floating-point support.
+- **No dynamic memory**: There are no heap allocations, pointers, or array types in the language or VM.
+- **Silent stack underflow**: Binary operations that find fewer than two values on the stack are silently skipped rather than aborting.
+- **No input instructions**: There is no opcode for reading user input at runtime.

@@ -1,0 +1,104 @@
+---
+title: 'Arithmetic'
+description: 'Arithmetic operators, operator precedence, and expression evaluation in ELIN.'
+keywords: ['arithmetic', 'operators', 'expressions', 'precedence', 'shunting yard']
+---
+
+ELIN supports standard arithmetic on integers. All values are integers — there are no floating-point numbers.
+
+## Operators
+
+| Operator | Operation | Example | Result |
+| -------- | --------- | ------- | ------ |
+| `+` | Addition | `3 + 4` | `7` |
+| `-` | Subtraction | `10 - 3` | `7` |
+| `*` | Multiplication | `3 * 4` | `12` |
+| `/` | Integer division | `10 / 3` | `3` |
+| `( )` | Grouping | `(1 + 2) * 3` | `9` |
+
+### Integer division
+
+Division truncates toward zero. There are no fractions or remainders accessible from ELIN source code:
+
+```elin
+let a = 10
+let b = 3
+let result = a / b
+print result
+# prints 3, not 3.333...
+```
+
+## Operator precedence
+
+ELIN uses the **Shunting Yard algorithm** to convert infix expressions to postfix before generating bytecode. This means standard PEMDAS/BODMAS precedence is respected automatically:
+
+1. Parentheses `( )` — highest
+2. Multiplication `*` and division `/`
+3. Addition `+` and subtraction `-` — lowest
+
+Operators of equal precedence are evaluated left to right.
+
+## Examples
+
+### Simple arithmetic
+
+```elin
+let x = 10
+let y = x + 5
+print y
+# prints 15
+```
+
+### Compound expression
+
+```elin
+let a = 2
+let b = 3
+let c = a + b * 4
+print c
+# prints 14 (b * 4 = 12, then + 2)
+```
+
+### Overriding precedence with parentheses
+
+```elin
+let a = 2
+let b = 3
+let c = (a + b) * 4
+print c
+# prints 20 ((2 + 3) = 5, then * 4)
+```
+
+### Chained operations
+
+```elin
+let base = 100
+let offset = 15
+let scale = 2
+let result = (base - offset) * scale
+print result
+# prints 170 ((100 - 15) = 85, then * 2)
+```
+
+## Arithmetic in reassignment
+
+The right-hand side of any `let` is a full expression. This is how you update a variable's value based on its current state:
+
+```elin
+let total = 0
+let total = total + 10
+let total = total + 25
+let total = total * 2
+print total
+# prints 70
+```
+
+<Tip>
+  Use parentheses whenever the evaluation order could be ambiguous. The compiler will always follow strict precedence rules, but explicit grouping makes intent clear.
+</Tip>
+
+## Integer-only constraint
+
+<Note>
+  ELIN is an integer-only language by design. There is no syntax for floating-point literals, and no float type. This is intentional — ELIN targets low-power hardware where floating-point operations are expensive.
+</Note>

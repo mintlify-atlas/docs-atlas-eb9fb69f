@@ -1,0 +1,119 @@
+---
+title: 'Variables'
+description: 'How to declare, use, and reassign variables in ELIN.'
+keywords: ['variables', 'let', 'declaration', 'assignment', 'scope']
+---
+
+Variables in ELIN are declared and assigned using the `let` keyword. There is no separate declaration step — the first `let` for a name both creates the variable and gives it a value.
+
+## Declaring a variable
+
+The syntax is always:
+
+```elin
+let <name> = <expression>
+```
+
+The right-hand side can be a literal integer, another variable, or an arithmetic expression:
+
+```elin
+let x = 10
+let y = x + 5
+let z = x * y - 3
+```
+
+## Reassignment
+
+Using `let` on a name that already exists reassigns it. A variable can reference itself on the right-hand side, making increment and accumulator patterns straightforward:
+
+```elin
+let counter = 0
+let counter = counter + 1
+let counter = counter + 1
+print counter
+```
+
+The value printed above is `2`.
+
+## Strict rules
+
+ELIN enforces two hard rules at compile time:
+
+### 1. Define before use
+
+A variable must appear on the left-hand side of a `let` before it can be used anywhere else.
+
+<Tabs>
+  <Tab title="Valid">
+    ```elin
+    let x = 10
+    let y = x + 1
+    print y
+    ```
+  </Tab>
+  <Tab title="Invalid">
+    <Warning>
+      Using a variable before declaring it is a compile-time error:
+
+      ```elin
+      let y = x + 1  # Error: 'x' used before definition
+      let x = 10
+      ```
+
+      The compiler will exit with:
+      ```
+      Error: Variable 'x' used before definition.
+      ```
+    </Warning>
+  </Tab>
+</Tabs>
+
+### 2. Every variable must be used
+
+Declaring a variable but never reading it (in a `print` or an expression) is also a compile-time error. This prevents dead code from accumulating.
+
+<Warning>
+  ```elin
+  let x = 10
+  let y = 20
+  print x
+  # 'y' was defined but never read
+  ```
+
+  The compiler will exit with:
+  ```
+  Error: Unused variables: y
+  ```
+
+  Every variable you declare must appear at least once in a `print` statement or on the right-hand side of a `let`.
+</Warning>
+
+## Scope
+
+All variables are globally scoped within the program file. A variable declared inside a `while` loop or `if` block is accessible everywhere in the file after that point — there is no block-level or local scope.
+
+```elin
+let i = 1
+while i <= 3
+    let inner = i * 10
+    let i = i + 1
+wend
+# 'inner' is still in scope here, but was last set in the final loop iteration
+print inner
+```
+
+## How the compiler tracks variables internally
+
+Every variable is assigned a sequential integer index starting from `0`, in the order it is first declared. This index maps to a slot in the VM's variable table.
+
+| Declaration order | Variable name | Internal index |
+| ----------------- | ------------- | -------------- |
+| 1st `let` | `i` | `0` |
+| 2nd `let` | `total` | `1` |
+| 3rd `let` | `result` | `2` |
+
+When the compiler emits a `LOAD` or `STORE` instruction, it uses this index rather than the name. The name exists only at compile time.
+
+<Note>
+  Reassigning a variable (a second `let` with the same name) does not allocate a new index — it reuses the existing one.
+</Note>

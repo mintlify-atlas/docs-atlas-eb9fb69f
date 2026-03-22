@@ -1,0 +1,213 @@
+---
+title: 'Examples'
+description: 'Complete, working ELIN programs demonstrating all major language features.'
+keywords: ['examples', 'programs', 'tutorial', 'ELIN']
+---
+
+The examples below are complete ELIN programs that compile and run correctly. Each one focuses on a specific language feature.
+
+<AccordionGroup>
+
+  <Accordion title="Hello world" defaultOpen={true}>
+
+The simplest possible ELIN program: declare a variable, print it, and halt.
+
+```elin
+let x = 42
+print x
+halt
+```
+
+**Expected output:**
+
+```text
+42
+```
+
+  </Accordion>
+
+  <Accordion title="Arithmetic">
+
+Demonstrates addition, multiplication, and subtraction. All four arithmetic operators (`+`, `-`, `*`, `/`) work the same way.
+
+```elin
+let a = 10
+let b = 3
+let sum = a + b
+let product = a * b
+let difference = a - b
+print sum
+print product
+print difference
+halt
+```
+
+**Expected output:**
+
+```text
+13
+30
+7
+```
+
+  </Accordion>
+
+  <Accordion title="Conditional (if/else)">
+
+Uses `if`/`else`/`end` with a `>` comparison to branch on a value. Both branches must declare the same variable name — ELIN tracks variable declaration per scope.
+
+```elin
+let temp = 80
+if temp > 100
+    let msg = 911
+    print msg
+else
+    let msg = 0
+    print msg
+end
+halt
+```
+
+**Expected output** (temp is 80, so the `else` branch runs):
+
+```text
+0
+```
+
+<Note>
+Every `if` block must be closed with `end`. The `else` branch is optional.
+</Note>
+
+  </Accordion>
+
+  <Accordion title="Counter loop (while/wend)">
+
+A `while` loop that counts from `1` to `10`. The loop condition is re-evaluated on every iteration; when `i <= 10` becomes false the loop exits.
+
+```elin
+let i = 1
+while i <= 10
+    print i
+    let i = i + 1
+wend
+halt
+```
+
+**Expected output:**
+
+```text
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+```
+
+<Note>
+Re-assigning a variable uses the same `let` syntax as declaring it. `let i = i + 1` reads the current value of `i`, adds `1`, and stores the result back.
+</Note>
+
+  </Accordion>
+
+  <Accordion title="Nested conditions">
+
+An `if` block nested inside a `while` loop. When `i` equals `3` a special value is printed; all other iterations print `0`.
+
+```elin
+let i = 1
+while i <= 5
+    print i
+    if i == 3
+        let special = 333
+        print special
+    else
+        let other = 0
+        print other
+    end
+    let i = i + 1
+wend
+halt
+```
+
+**Expected output:**
+
+```text
+1
+0
+2
+0
+3
+333
+4
+0
+5
+0
+```
+
+This pattern mirrors the structure used in `test.elin`, the canonical integration test for the ELIN compiler.
+
+  </Accordion>
+
+  <Accordion title="Accumulator (summing in a loop)">
+
+Accumulates a running total by reassigning a variable on every loop iteration. After the loop, the final sum is printed once.
+
+```elin
+let i = 1
+let total = 0
+while i <= 5
+    let total = total + i
+    let i = i + 1
+wend
+print total
+halt
+```
+
+**Expected output** (1 + 2 + 3 + 4 + 5):
+
+```text
+15
+```
+
+  </Accordion>
+
+</AccordionGroup>
+
+---
+
+## All comparison operators
+
+The following table shows every comparison operator available in `if` and `while` conditions.
+
+| Operator | Meaning | Example condition |
+|----------|---------|-------------------|
+| `==` | Equal | `if x == 0` |
+| `!=` | Not equal | `if x != 0` |
+| `<` | Less than | `while i < 10` |
+| `<=` | Less than or equal | `while i <= 10` |
+| `>` | Greater than | `if temp > 100` |
+| `>=` | Greater than or equal | `if score >= 50` |
+
+---
+
+## Program structure rules
+
+<Columns cols={2}>
+  <Card title="Required" icon="circle-check">
+    - Every program must end with `halt`
+    - Every `if` must close with `end`
+    - Every `while` must close with `wend`
+    - Every declared variable must be read at least once
+  </Card>
+  <Card title="Not supported" icon="circle-xmark">
+    - String values (integers only)
+    - Functions or procedures
+    - Arrays or compound data types
+    - Floating-point numbers
+  </Card>
+</Columns>

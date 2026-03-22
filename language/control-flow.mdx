@@ -1,0 +1,143 @@
+---
+title: 'Control flow'
+description: 'Conditional execution with if, else, and end in ELIN.'
+keywords: ['if', 'else', 'end', 'conditionals', 'control flow', 'comparison']
+---
+
+ELIN supports conditional execution through `if` blocks. A condition is evaluated once when the `if` line is reached, and either the `if` body or the optional `else` body is executed.
+
+## Basic `if` block
+
+```elin
+if <condition>
+    # body executed when condition is true
+end
+```
+
+If the condition evaluates to non-zero (true), the body executes. Otherwise it is skipped and execution resumes after `end`.
+
+```elin
+let score = 90
+if score > 50
+    let passed = 1
+    print passed
+end
+```
+
+## `if`/`else` block
+
+```elin
+if <condition>
+    # executed when true
+else
+    # executed when false
+end
+```
+
+Exactly one of the two branches executes — never both:
+
+```elin
+let temp = 80
+if temp > 100
+    let msg = 911
+    print msg
+else
+    let msg = 0
+    print msg
+end
+```
+
+## Comparison operators
+
+Conditions are formed using a comparison operator between two operands. Both operands may be variables or integer literals.
+
+| Operator | Meaning |
+| -------- | ------- |
+| `==` | Equal to |
+| `!=` | Not equal to |
+| `<` | Less than |
+| `<=` | Less than or equal to |
+| `>` | Greater than |
+| `>=` | Greater than or equal to |
+
+A condition evaluates to `1` when true and `0` when false. Because ELIN treats non-zero as true, comparison results can also be stored in variables and used in further logic:
+
+```elin
+let x = 5
+let is_big = x > 3
+print is_big
+# prints 1
+```
+
+## How conditions work
+
+Internally, the compiler emits a comparison instruction (`CMP_EQ`, `CMP_LT`, etc.) that pushes `1` or `0` onto the stack. A `JZ` (jump if zero) instruction then either skips the body or falls through to execute it.
+
+- **Non-zero (1)** — condition is true, body executes
+- **Zero (0)** — condition is false, body is skipped
+
+## Nesting
+
+`if` blocks can be nested inside other `if` blocks or inside `while` loops. The compiler tracks nesting depth automatically to match each `end` with the correct opening `if`.
+
+### `if` inside `if`
+
+```elin
+let x = 8
+if x > 5
+    if x > 10
+        let big = 1
+        print big
+    else
+        let medium = 2
+        print medium
+    end
+end
+```
+
+### `if` inside `while` (from test.elin)
+
+This is a real working program that combines loops and nested conditionals:
+
+```elin
+let i = 1
+while i <= 10000
+    print i
+    if i == 5
+        let five = 555
+        print five
+    else
+        if i == 8
+            let eight = 888
+            print eight
+        else
+            let zero = 0
+            print zero
+        end
+    end
+    let i = i + 1
+    print i
+wend
+halt
+```
+
+Each iteration prints the current value of `i`, then prints `555` if `i` equals 5, `888` if `i` equals 8, or `0` otherwise — followed by the incremented `i`.
+
+<Note>
+  Every `if` must be closed with exactly one `end`. A missing `end` causes a compile-time error:
+  ```
+  Error: Missing 'end' for 'if'
+  ```
+</Note>
+
+## Assigning comparison results
+
+A comparison can appear on the right-hand side of a `let` to store the boolean result:
+
+```elin
+let a = 10
+let b = 20
+let a_is_smaller = a < b
+print a_is_smaller
+# prints 1
+```

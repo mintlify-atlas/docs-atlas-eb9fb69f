@@ -1,0 +1,121 @@
+---
+title: 'Loops'
+description: 'Repeating code with while loops in ELIN.'
+keywords: ['while', 'wend', 'loops', 'iteration', 'counter']
+---
+
+ELIN has one loop construct: `while`. A `while` loop repeats its body as long as its condition remains non-zero (true).
+
+## Syntax
+
+```elin
+while <condition>
+    # body
+wend
+```
+
+The condition is evaluated at the top of every iteration. When it becomes zero, execution jumps past `wend` and the loop ends.
+
+## Counter loop
+
+The most common pattern is a counter variable that increments on each iteration:
+
+```elin
+let i = 1
+while i <= 10
+    print i
+    let i = i + 1
+wend
+```
+
+This prints the numbers 1 through 10. The update `let i = i + 1` must be written explicitly — ELIN has no built-in increment operator.
+
+## Accumulator loop
+
+Loop bodies can accumulate values across iterations:
+
+```elin
+let i = 1
+let sum = 0
+while i <= 100
+    let sum = sum + i
+    let i = i + 1
+wend
+print sum
+# prints 5050
+```
+
+## Condition re-evaluation
+
+The condition expression is fully re-evaluated at the start of each iteration. Any variables referenced in the condition are read at their current value, so updating them inside the loop body affects when the loop terminates:
+
+```elin
+let n = 1
+while n < 1000
+    let n = n * 2
+wend
+print n
+# prints 1024 (first power of 2 >= 1000)
+```
+
+## Comparison operators in conditions
+
+Any of the six comparison operators are valid in a `while` condition:
+
+| Operator | Example condition |
+| -------- | ----------------- |
+| `==` | `while x == 0` |
+| `!=` | `while x != 100` |
+| `<` | `while i < 50` |
+| `<=` | `while i <= 50` |
+| `>` | `while count > 0` |
+| `>=` | `while total >= 10` |
+
+## Nested loops
+
+A `while` loop can be placed inside another `while` loop. The compiler tracks nesting depth automatically, so each `wend` closes its nearest enclosing `while`:
+
+```elin
+let i = 1
+while i <= 3
+    let j = 1
+    while j <= 3
+        let product = i * j
+        print product
+        let j = j + 1
+    wend
+    let i = i + 1
+wend
+```
+
+<Note>
+  Variables declared inside a nested loop are globally scoped. In the example above, `j` and `product` remain accessible after both loops complete.
+</Note>
+
+## Iteration limit
+
+<Warning>
+  ELIN enforces a maximum of **999,999,999** iterations per loop. This limit exists to prevent infinite loops from locking up the hardware target (ESP8266). Programs that reach this limit are forcibly halted by the VM.
+</Warning>
+
+## Avoiding infinite loops
+
+<Steps>
+  <Step title="Initialize the counter before the loop">
+    The condition variable must exist before the `while` line is reached.
+
+    ```elin
+    let i = 0
+    while i < 10
+        let i = i + 1
+    wend
+    print i
+    ```
+  </Step>
+  <Step title="Update the condition variable inside the loop">
+    Ensure the variable used in the condition is modified each iteration, moving it toward the exit condition.
+  </Step>
+  <Step title="Verify the exit condition is reachable">
+    Double-check that the arithmetic will eventually make the condition false. For example, `while i < 10` with `let i = i + 1` will exit after 10 iterations; `while i < 10` with no update to `i` will run until the iteration limit.
+  </Step>
+</Steps>

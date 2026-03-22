@@ -1,0 +1,99 @@
+---
+title: 'Syntax'
+description: 'The fundamental rules for writing valid ELIN programs.'
+keywords: ['syntax', 'comments', 'keywords', 'structure']
+---
+
+ELIN programs are plain text files where every statement occupies exactly one line. There are no semicolons, no braces — the line itself is the unit of execution.
+
+## One statement per line
+
+Each line contains a single command. Blank lines are ignored. Leading whitespace (spaces and tabs) is stripped before parsing, which means you can freely indent code inside blocks without affecting behavior.
+
+```elin
+let x = 10
+let y = x + 5
+print y
+halt
+```
+
+## Comments
+
+Lines beginning with `#` or `//` are treated as comments and produce no bytecode. Comments must be on their own line — inline comments (after a statement) are not supported.
+
+```elin
+# This is a comment
+// This is also a comment
+let total = 100
+print total
+```
+
+<Note>
+Inline comments such as `let x = 10 # set x` are not valid. Place all comments on their own dedicated line.
+</Note>
+
+## Whitespace and indentation
+
+Leading whitespace before any statement is ignored. This lets you indent block bodies for readability without any syntactic meaning:
+
+```elin
+let i = 1
+while i <= 5
+    print i
+    let i = i + 1
+wend
+```
+
+The indented `print i` and `let i = i + 1` lines are parsed identically to unindented versions.
+
+## Reserved keywords
+
+The following identifiers are reserved and cannot be used as variable names:
+
+| Keyword | Purpose |
+| ------- | ------- |
+| `let` | Variable declaration and assignment |
+| `print` | Output a variable's value |
+| `halt` | Stop program execution |
+| `if` | Begin a conditional block |
+| `else` | Alternate branch of an `if` block |
+| `end` | Close an `if` block |
+| `while` | Begin a loop block |
+| `wend` | Close a `while` block |
+
+## The `halt` instruction
+
+`halt` immediately terminates execution. The compiler automatically appends a `halt` at the end of every program if one is not present, so it is optional — but including it explicitly makes the program's termination point clear.
+
+```elin
+let result = 42
+print result
+halt
+```
+
+## Complete example
+
+The following is a real, working ELIN program demonstrating syntax, comments, blocks, and indentation:
+
+```elin
+# Count from 1 to 10000, printing special messages at 5 and 8
+let i = 1
+while i <= 10000
+    print i
+    if i == 5
+        let five = 555
+        print five
+    else
+        if i == 8
+            let eight = 888
+            print eight
+        else
+            let zero = 0
+            print zero
+        end
+    end
+    let i = i + 1
+    print i
+wend
+halt
+```

@@ -1,0 +1,300 @@
+---
+title: 'Opcodes'
+description: 'Complete instruction set reference for the ELIN virtual machine.'
+keywords: ['opcodes', 'bytecode', 'instruction set', 'VM', 'stack']
+---
+
+The ELIN compiler translates source code into bytecode that the ELIN virtual machine (VM) executes. Each instruction is represented by an integer opcode, followed by zero or more operands on the same line.
+
+## Instruction set summary
+
+| Opcode | Mnemonic | Code | Operands | Description |
+|--------|----------|------|----------|-------------|
+| `PUSH` | Push immediate | 1 | `0 0 0 <value>` | Push integer literal onto the stack |
+| `LOAD` | Load variable | 2 | `<var_index>` | Push variable value onto the stack |
+| `STORE` | Store variable | 3 | `<var_index>` | Pop stack top and store in variable |
+| `ADD` | Add | 4 | — | Pop two values, push their sum |
+| `SUB` | Subtract | 5 | — | Pop two values, push `a - b` |
+| `MUL` | Multiply | 6 | — | Pop two values, push their product |
+| `DIV` | Divide | 7 | — | Pop two values, push `a / b` |
+| `PRINT` | Print | 8 | `<var_index>` | Print variable value to stdout |
+| `HALT` | Halt | 9 | — | Stop execution immediately |
+| `CMP_EQ` | Equal | 10 | — | Pop two values, push `1` if `a == b`, else `0` |
+| `CMP_NEQ` | Not equal | 11 | — | Pop two values, push `1` if `a != b`, else `0` |
+| `CMP_LT` | Less than | 12 | — | Pop two values, push `1` if `a < b`, else `0` |
+| `CMP_LTE` | Less than or equal | 13 | — | Pop two values, push `1` if `a <= b`, else `0` |
+| `CMP_GT` | Greater than | 14 | — | Pop two values, push `1` if `a > b`, else `0` |
+| `CMP_GTE` | Greater than or equal | 15 | — | Pop two values, push `1` if `a >= b`, else `0` |
+| `JMP` | Jump | 16 | `<address>` | Unconditional jump to bytecode line address |
+| `JZ` | Jump if zero | 17 | `<address>` | Jump if stack top is `0` (pops the value) |
+| `JNZ` | Jump if not zero | 18 | `<address>` | Jump if stack top is non-zero (pops the value) |
+
+<Note>
+Bytecode addresses are 0-indexed into the non-comment lines of the `.outz` file. Comment lines (starting with `#`) are skipped by the VM and do not count toward the address space.
+</Note>
+
+---
+
+## Stack operations
+
+### PUSH — opcode 1
+
+**Format:** `1 0 0 0 <value>`
+
+Pushes the integer `<value>` onto the evaluation stack. The three zeros after the opcode are padding reserved for future use; the value to push is always the fifth token on the line.
+
+**Stack effect:** `[] → [value]`
+
+```text bytecode
+1 0 0 0 42
+```
+
+Pushes `42` onto the stack.
+
+---
+
+### LOAD — opcode 2
+
+**Format:** `2 <var_index>`
+
+Reads the value stored in the variable at `<var_index>` and pushes it onto the stack. Variables are indexed from `0` in the order they are first declared.
+
+**Stack effect:** `[] → [variables[var_index]]`
+
+```text bytecode
+2 0
+```
+
+Pushes the value of variable `0` onto the stack. If the variable index does not exist, the VM prints a debug message and leaves the stack unchanged.
+
+---
+
+### STORE — opcode 3
+
+**Format:** `3 <var_index>`
+
+Pops the top value from the stack and writes it into the variable at `<var_index>`. If the variable array is not large enough, it is automatically resized.
+
+**Stack effect:** `[value] → []`
+
+```text bytecode
+3 0
+```
+
+Pops the stack top and stores it in variable `0`.
+
+---
+
+## Arithmetic
+
+All arithmetic opcodes pop two operands from the stack, compute a result, and push that result back. The value pushed last (`b`) is the right-hand operand; the value pushed before it (`a`) is the left-hand operand.
+
+**Stack effect for all arithmetic:** `[a, b] → [result]` (where `b` is on top)
+
+### ADD — opcode 4
+
+**Format:** `4`
+
+Pushes `a + b`.
+
+---
+
+### SUB — opcode 5
+
+**Format:** `5`
+
+Pushes `a - b`. Order matters: the first value pushed is the minuend.
+
+---
+
+### MUL — opcode 6
+
+**Format:** `6`
+
+Pushes `a * b`.
+
+---
+
+### DIV — opcode 7
+
+**Format:** `7`
+
+Pushes `a / b`. If `b` is zero the VM prints `Error: Division by zero` and does **not** push a result; the stack is left with `a` already popped.
+
+<Warning>
+Division by zero does not halt the program — execution continues from the next instruction, but the result is discarded. Ensure the divisor is non-zero before dividing.
+</Warning>
+
+---
+
+## I/O
+
+### PRINT — opcode 8
+
+**Format:** `8 <var_index>`
+
+Prints the integer value stored in the variable at `<var_index>` to stdout, followed by a newline. Does not affect the stack.
+
+**Stack effect:** none
+
+```text bytecode
+8 0
+```
+
+Prints the value of variable `0`.
+
+---
+
+## Control flow
+
+### HALT — opcode 9
+
+**Format:** `9`
+
+Stops execution immediately and returns from the `execute()` function. Every ELIN program must end with `halt`; the compiler automatically appends one if it is missing.
+
+**Stack effect:** none
+
+---
+
+## Comparison operators
+
+Comparison opcodes pop two values, compare them, then push `1` (true) or `0` (false). Like arithmetic, `a` is the first value pushed and `b` is the second (on top).
+
+**Stack effect for all comparisons:** `[a, b] → [0 or 1]`
+
+### CMP_EQ — opcode 10
+
+**Format:** `10`
+
+Pushes `1` if `a == b`, else `0`. Corresponds to the `==` operator.
+
+---
+
+### CMP_NEQ — opcode 11
+
+**Format:** `11`
+
+Pushes `1` if `a != b`, else `0`. Corresponds to the `!=` operator.
+
+---
+
+### CMP_LT — opcode 12
+
+**Format:** `12`
+
+Pushes `1` if `a < b`, else `0`. Corresponds to the `<` operator.
+
+---
+
+### CMP_LTE — opcode 13
+
+**Format:** `13`
+
+Pushes `1` if `a <= b`, else `0`. Corresponds to the `<=` operator.
+
+---
+
+### CMP_GT — opcode 14
+
+**Format:** `14`
+
+Pushes `1` if `a > b`, else `0`. Corresponds to the `>` operator.
+
+---
+
+### CMP_GTE — opcode 15
+
+**Format:** `15`
+
+Pushes `1` if `a >= b`, else `0`. Corresponds to the `>=` operator.
+
+---
+
+## Jump instructions
+
+Jump instructions alter the program counter (PC). Addresses are 0-indexed positions in the non-comment bytecode line array.
+
+### JMP — opcode 16
+
+**Format:** `16 <address>`
+
+Unconditionally sets the PC to `<address>`. Used by the compiler to loop back to the top of a `while` block.
+
+**Stack effect:** none
+
+```text bytecode
+16 4
+```
+
+Jumps to bytecode line 4.
+
+---
+
+### JZ — opcode 17
+
+**Format:** `17 <address>`
+
+Pops the top of the stack. If the value is `0`, jumps to `<address>`; otherwise continues to the next instruction. Used to skip over `if` bodies and exit `while` loops when the condition is false.
+
+**Stack effect:** `[value] → []`
+
+---
+
+### JNZ — opcode 18
+
+**Format:** `18 <address>`
+
+Pops the top of the stack. If the value is **not** `0`, jumps to `<address>`; otherwise continues to the next instruction.
+
+**Stack effect:** `[value] → []`
+
+---
+
+## Bytecode example
+
+The following ELIN source and its compiled bytecode illustrate how opcodes compose.
+
+<Tabs>
+  <Tab title="ELIN source">
+```elin
+let x = 10
+let y = 3
+let result = x + y
+print result
+halt
+```
+  </Tab>
+  <Tab title="Bytecode output">
+```text
+# Package: example
+#
+#
+#
+1 0 0 0 10
+3 0
+1 0 0 0 3
+3 1
+2 0
+2 1
+4
+3 2
+8 2
+9
+```
+  </Tab>
+  <Tab title="Execution trace">
+```text
+PUSH 10        → stack: [10]
+STORE var[0]   → stack: [],       var[0]=10
+PUSH 3         → stack: [3]
+STORE var[1]   → stack: [],       var[1]=3
+LOAD var[0]    → stack: [10]
+LOAD var[1]    → stack: [10, 3]
+ADD            → stack: [13]
+STORE var[2]   → stack: [],       var[2]=13
+PRINT var[2]   → output: 13
+HALT
+```
+  </Tab>
+</Tabs>

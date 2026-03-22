@@ -1,0 +1,98 @@
+---
+title: "Introduction to ELIN"
+description: "A simple, stack-based programming language with a Python compiler and C++ virtual machine, designed for low-power hardware."
+---
+
+# Introduction to ELIN
+
+ELIN is a stack-oriented, integer-only programming language designed for execution on low-power hardware — specifically the ESP8266. By compiling to a compact bytecode format interpreted by a custom virtual machine, ELIN keeps programs small and execution predictable.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Write and run your first ELIN program in minutes
+  </Card>
+  <Card title="Language Guide" icon="book" href="/language/syntax">
+    Learn ELIN syntax, variables, and control flow
+  </Card>
+  <Card title="Toolchain" icon="wrench" href="/toolchain/compiler">
+    Understand the compiler and virtual machine
+  </Card>
+  <Card title="Opcode Reference" icon="microchip" href="/reference/opcodes">
+    Full instruction set reference for the ELIN VM
+  </Card>
+</CardGroup>
+
+## What is ELIN?
+
+ELIN programs are written in a human-readable source format (`.elin` files) and compiled by a Python compiler into a bytecode format (`.outz` files). The bytecode is then executed by a C++ virtual machine.
+
+```elin hello.elin
+# My first ELIN program
+let x = 10
+let y = 5
+let z = x + y
+print z
+halt
+```
+
+The language is intentionally minimal — every instruction occupies its own line, and the execution model is a simple integer stack machine.
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="Stack-based execution" icon="layer-group">
+    All operations push and pop values from an integer evaluation stack, keeping the VM simple and fast.
+  </Card>
+  <Card title="Strict variable rules" icon="shield-check">
+    Variables must be defined before use and must be used at least once — catching bugs at compile time.
+  </Card>
+  <Card title="Control flow" icon="code-branch">
+    Full support for `if`/`else` conditionals and `while` loops with nested block support.
+  </Card>
+  <Card title="Proper operator precedence" icon="calculator">
+    Arithmetic expressions respect PEMDAS/BODMAS order of operations via the Shunting Yard algorithm.
+  </Card>
+  <Card title="Compact bytecode" icon="file-code">
+    Programs compile to a space-separated integer bytecode optimised for storage on embedded hardware.
+  </Card>
+  <Card title="Automatic HALT" icon="stop">
+    The compiler automatically appends a `HALT` instruction if your program doesn't end with one.
+  </Card>
+</CardGroup>
+
+## How it works
+
+ELIN has a two-stage toolchain:
+
+<Steps>
+  <Step title="Write source code">
+    Create a `.elin` file using ELIN's simple statement-per-line syntax.
+  </Step>
+  <Step title="Compile to bytecode">
+    Run the Python compiler: `python3 compiler/main.py yourfile.elin`. This produces a `.outz` bytecode file.
+  </Step>
+  <Step title="Execute with the VM">
+    Run the C++ virtual machine binary against the `.outz` file to execute your program.
+  </Step>
+</Steps>
+
+## Language at a glance
+
+| Feature | Syntax |
+|---|---|
+| Variable declaration | `let x = 10` |
+| Print output | `print x` |
+| Arithmetic | `let z = x + y * 2` |
+| Conditional | `if x > 5 ... end` |
+| Conditional with else | `if x > 5 ... else ... end` |
+| While loop | `while i <= 10 ... wend` |
+| Stop execution | `halt` |
+| Comment | `# this is a comment` or `// this is a comment` |
+
+## Current version
+
+ELIN is at **v0.1.0**. The language is a toy/educational language under active development. The current instruction set supports integer arithmetic, comparisons, conditional branching, and loops.
+
+<Note>
+ELIN is integer-only. There is no floating-point arithmetic, strings, or arrays in the current version.
+</Note>

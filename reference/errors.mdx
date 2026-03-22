@@ -1,0 +1,241 @@
+---
+title: 'Errors'
+description: 'All compile-time and runtime errors in ELIN, with causes and fixes.'
+keywords: ['errors', 'debugging', 'compile error', 'runtime error', 'ELIN']
+---
+
+ELIN errors fall into two categories: **compile-time errors** reported by the compiler and **runtime errors** printed by the VM during execution.
+
+## Compile-time vs. runtime errors
+
+<Columns cols={2}>
+  <Card title="Compile-time errors" icon="triangle-exclamation">
+    Detected by `compiler.py` while translating source to bytecode. The compiler prints the error message to stdout and exits with code `1` via `sys.exit(1)`. No bytecode file is produced.
+  </Card>
+  <Card title="Runtime errors" icon="bolt">
+    Detected by the VM (`main.cpp`) during execution of a `.outz` bytecode file. The VM prints a message and continues running from the next instruction — it does **not** halt automatically.
+  </Card>
+</Columns>
+
+---
+
+## Compile-time errors
+
+### Variable used before definition
+
+<Warning>
+`Error: Variable '{name}' used before definition.`
+</Warning>
+
+You referenced a variable name that has not yet been declared with `let`.
+
+<Tabs>
+  <Tab title="Incorrect">
+```elin
+print x
+let x = 5
+halt
+```
+`x` is read before it is declared.
+  </Tab>
+  <Tab title="Correct">
+```elin
+let x = 5
+print x
+halt
+```
+Declare the variable with `let` before using it.
+  </Tab>
+</Tabs>
+
+---
+
+### Unused variables
+
+<Warning>
+`Error: Unused variables: {names}`
+</Warning>
+
+One or more variables were declared with `let` but never read. ELIN treats unused variables as an error to prevent dead code.
+
+<Tabs>
+  <Tab title="Incorrect">
+```elin
+let x = 10
+let y = 20
+print x
+halt
+```
+`y` is declared but never read.
+  </Tab>
+  <Tab title="Correct">
+```elin
+let x = 10
+let y = 20
+print x
+print y
+halt
+```
+Read every declared variable at least once.
+  </Tab>
+</Tabs>
+
+<Note>
+The compiler checks for unused variables after compilation is complete. All other errors are caught first.
+</Note>
+
+---
+
+### No comparison operator found
+
+<Warning>
+`Error: No comparison operator found`
+</Warning>
+
+An `if` or `while` condition was written without a valid comparison operator. Valid operators are `==`, `!=`, `<`, `<=`, `>`, and `>=`.
+
+<Tabs>
+  <Tab title="Incorrect">
+```elin
+let x = 5
+if x
+    print x
+end
+halt
+```
+The condition `x` has no comparison operator.
+  </Tab>
+  <Tab title="Correct">
+```elin
+let x = 5
+if x > 0
+    print x
+end
+halt
+```
+Always include a comparison operator in `if` and `while` conditions.
+  </Tab>
+</Tabs>
+
+---
+
+### Missing `end` for `if`
+
+<Warning>
+`Error: Missing 'end' for 'if'`
+</Warning>
+
+An `if` block was opened but never closed with `end`.
+
+<Tabs>
+  <Tab title="Incorrect">
+```elin
+let x = 5
+if x > 0
+    print x
+halt
+```
+The `if` block is never terminated.
+  </Tab>
+  <Tab title="Correct">
+```elin
+let x = 5
+if x > 0
+    print x
+end
+halt
+```
+Close every `if` block with a matching `end`.
+  </Tab>
+</Tabs>
+
+<Note>
+Nested `if` blocks each require their own `end`. The compiler tracks nesting depth, so a single missing `end` in a nested structure will also trigger this error.
+</Note>
+
+---
+
+### Unknown command
+
+<Warning>
+`Error: Unknown command '{cmd}'`
+</Warning>
+
+A line begins with a keyword the compiler does not recognise. Valid top-level keywords are `let`, `print`, `halt`, `if`, `while`, `else`, `end`, and `wend`.
+
+<Tabs>
+  <Tab title="Incorrect">
+```elin
+let x = 5
+show x
+halt
+```
+`show` is not a valid ELIN keyword.
+  </Tab>
+  <Tab title="Correct">
+```elin
+let x = 5
+print x
+halt
+```
+Use `print` to output a variable's value.
+  </Tab>
+</Tabs>
+
+---
+
+## Runtime errors
+
+### Division by zero
+
+<Warning>
+`Error: Division by zero`
+</Warning>
+
+The VM executed a `DIV` instruction where the divisor (top of stack) was `0`. The division is skipped and execution continues from the next instruction, but no result is pushed — any subsequent instruction that expects a value on the stack may behave unexpectedly.
+
+<Tabs>
+  <Tab title="Incorrect">
+```elin
+let a = 10
+let b = 0
+let result = a / b
+print result
+halt
+```
+Dividing by a variable that holds `0`.
+  </Tab>
+  <Tab title="Correct">
+```elin
+let a = 10
+let b = 5
+let result = a / b
+print result
+halt
+```
+Ensure the divisor is non-zero before performing division.
+  </Tab>
+</Tabs>
+
+---
+
+## VM debug messages
+
+The VM also emits `[DEBUG]`-prefixed messages in two situations that do not correspond to compiler errors:
+
+| Message | When it appears |
+|---|---|
+| `[DEBUG] Variable not found: <index>` | A `LOAD` or `PRINT` instruction references a variable index that has not been stored yet. |
+| `[DEBUG] Unknown opcode: <n>` | The VM encounters an opcode integer it does not recognise. |
+
+These messages indicate a corrupted or manually edited `.outz` file. Always use the ELIN compiler to generate bytecode rather than editing it by hand.
+
+---
+
+## Compiler exit behaviour
+
+Every compile-time error calls `sys.exit(1)` immediately after printing the message. This means:
+
+- Only the **first** error encountered is reported per compilation run.
+- No partial bytecode file is written.
+- The exit code `1` can be detected by shell scripts or build tools to signal a failed build.
