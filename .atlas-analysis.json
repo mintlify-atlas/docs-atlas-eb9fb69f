@@ -1,0 +1,72 @@
+{
+  "projectType": "general",
+  "projectName": "ELIN Programming Language",
+  "projectDescription": "A simple, stack-based programming language with a Python compiler and C++ virtual machine, designed for low-power hardware like the ESP8266.",
+  "theme": "palm",
+  "primaryColor": "#5B6CF9",
+  "lightColor": "#EEF0FF",
+  "darkColor": "#1A1D3A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Language Guide",
+            "pages": [
+              "language/syntax",
+              "language/variables",
+              "language/arithmetic",
+              "language/control-flow",
+              "language/loops"
+            ]
+          },
+          {
+            "group": "Toolchain",
+            "pages": [
+              "toolchain/compiler",
+              "toolchain/virtual-machine",
+              "toolchain/bytecode-format"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/opcodes",
+              "reference/errors",
+              "reference/examples"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Stack-based execution model with a compact integer bytecode format",
+    "Python compiler translating .elin source to .outz bytecode",
+    "C++ virtual machine for executing compiled bytecode",
+    "Variables with strict definition-before-use and must-be-used enforcement",
+    "Arithmetic with proper operator precedence via Shunting Yard algorithm",
+    "Control flow: if/else conditionals and while loops",
+    "Comparison operators: ==, !=, <, <=, >, >=",
+    "Built-in web-based VM visualizer",
+    "Automatic HALT insertion for programs that don't end with halt",
+    "Loop iteration limit of 999,999,999 to prevent infinite loops"
+  ],
+  "publicApiSurface": [
+    "python3 compiler/main.py <source_file.elin>",
+    "let <var> = <expression>",
+    "print <var>",
+    "halt",
+    "if <condition> ... end",
+    "if <condition> ... else ... end",
+    "while <condition> ... wend",
+    "Opcodes: PUSH(1), LOAD(2), STORE(3), ADD(4), SUB(5), MUL(6), DIV(7), PRINT(8), HALT(9)",
+    "Comparison opcodes: CMP_EQ(10), CMP_NEQ(11), CMP_LT(12), CMP_LTE(13), CMP_GT(14), CMP_GTE(15)",
+    "Jump opcodes: JMP(16), JZ(17), JNZ(18)"
+  ]
+}
